@@ -102,7 +102,7 @@ DATABASES = {
         'USER': 'jyotijha',
         'PASSWORD': '3e1sBdPnUbdVeOjO1fMMnkHGLKchV5OW',
         'HOST': '10.220.107.215',
-        'PORT': '5432',
+        'PORT': '59146',
     }
 }
 
