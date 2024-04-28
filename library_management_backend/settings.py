@@ -20,8 +20,6 @@ load_dotenv()
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-print("***********",os.environ.get('DATABASE_URL'))
-
 # Replace the SQLite DATABASES configuration with PostgreSQL:
 
 DATABASES = {
@@ -36,9 +34,9 @@ SECRET_KEY = 'django-insecure-^exqbk*o+yn)p-9!$*fzlh4a$ldm$$j14hx($6dakj7+l981k^
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-# ALLOWED_HOSTS = ['127.0.0.1', '.vercel.app', 'localhost', 'now.sh']
+ALLOWED_HOSTS = ['127.0.0.1', '.vercel.app', 'localhost', 'now.sh', '.floxus.co']
 
-ALLOWED_HOSTS = ["*"]
+# ALLOWED_HOSTS = ["*"]
 # Application definition
 
 INSTALLED_APPS = [
@@ -102,8 +100,8 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'library_management',
         'USER': 'jyotijha',
-        'PASSWORD': 'admin123',
-        'HOST': 'localhost',
+        'PASSWORD': '3e1sBdPnUbdVeOjO1fMMnkHGLKchV5OW',
+        'HOST': 'dpg-conae84f7o1s73fgn7sg-a',
         'PORT': '5432',
     }
 }
