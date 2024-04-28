@@ -12,10 +12,20 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 
 from pathlib import Path
 import os
+import dj_database_url
+from dotenv import load_dotenv
 
+# Load environment variables from .env file
+load_dotenv()
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+print("***********",os.environ.get('DATABASE_URL'))
+
+# Replace the SQLite DATABASES configuration with PostgreSQL:
+
+DATABASES = {
+    "default": dj_database_url.config(default=os.environ.get("DATABASE_URL"),conn_max_age=600)}
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
@@ -26,9 +36,9 @@ SECRET_KEY = 'django-insecure-^exqbk*o+yn)p-9!$*fzlh4a$ldm$$j14hx($6dakj7+l981k^
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = ['127.0.0.1', '.vercel.app', 'localhost', 'now.sh']
+# ALLOWED_HOSTS = ['127.0.0.1', '.vercel.app', 'localhost', 'now.sh']
 
-
+ALLOWED_HOSTS = ["*"]
 # Application definition
 
 INSTALLED_APPS = [
@@ -81,7 +91,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'library_management_backend.wsgi.app'
+WSGI_APPLICATION = 'library_management_backend.wsgi.application'
 
 
 # Database
@@ -137,10 +147,10 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 
-STATICFILES_DIRS = os.path.join(BASE_DIR, 'static'),
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles_build', 'static')
+# STATICFILES_DIRS = os.path.join(BASE_DIR, 'static')
+# STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles_build', 'static')
 
-MEDIA_ROOT = BASE_DIR / 'media'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
