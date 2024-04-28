@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-^exqbk*o+yn)p-9!$*fzlh4a$ldm$$j14hx($6dakj7+l981k^
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = ['127.0.0.1', '.vercel.app']
+ALLOWED_HOSTS = ['127.0.0.1', '.vercel.app', 'localhost', 'now.sh']
 
 
 # Application definition
@@ -88,13 +88,16 @@ WSGI_APPLICATION = 'library_management_backend.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-        'OPTIONS': {
-            'timeout': 30,
-        },
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'library_management',
+        'USER': 'jyotijha',
+        'PASSWORD': 'admin123',
+        'HOST': 'localhost',
+        'PORT': '5432',
     }
 }
+
+
 
 
 # Password validation
