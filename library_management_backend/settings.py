@@ -95,16 +95,16 @@ WSGI_APPLICATION = 'library_management_backend.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'library_management',
-        'USER': 'jyotijha',
-        'PASSWORD': '3e1sBdPnUbdVeOjO1fMMnkHGLKchV5OW',
-        'HOST': '10.220.107.215',
-        'PORT': '59146',
-    }
-}
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.postgresql',
+#         'NAME': 'library_management',
+#         'USER': 'jyotijha',
+#         'PASSWORD': '3e1sBdPnUbdVeOjO1fMMnkHGLKchV5OW',
+#         'HOST': '10.220.107.215',
+#         'PORT': '59146',
+#     }
+# }
 
 
 
