@@ -101,7 +101,7 @@ DATABASES = {
         'NAME': 'library_management',
         'USER': 'jyotijha',
         'PASSWORD': '3e1sBdPnUbdVeOjO1fMMnkHGLKchV5OW',
-        'HOST': 'dpg-conae84f7o1s73fgn7sg-a',
+        'HOST': '0.0.0.0',
         'PORT': '5432',
     }
 }
