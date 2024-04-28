@@ -1,3 +1,7 @@
-python3.9 -m pip install --upgrade pip
+#!/bin/bash
+
+# Install dependencies from requirements.txt
 pip install -r requirements.txt
+
+# Collect static files
 python3.9 manage.py collectstatic --noinput
