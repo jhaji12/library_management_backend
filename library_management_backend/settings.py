@@ -32,11 +32,11 @@ DATABASES = {
 SECRET_KEY = 'django-insecure-^exqbk*o+yn)p-9!$*fzlh4a$ldm$$j14hx($6dakj7+l981k^'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
-ALLOWED_HOSTS = ['127.0.0.1', '.vercel.app', 'localhost', 'now.sh', '.floxus.co', "https://library-management-backend-i55e.onrender.com/"]
+# ALLOWED_HOSTS = ['127.0.0.1', '.vercel.app', 'localhost', 'now.sh', '.floxus.co', "https://library-management-backend-i55e.onrender.com/"]
 
-# ALLOWED_HOSTS = ["*"]
+ALLOWED_HOSTS = ["*"]
 # Application definition
 
 INSTALLED_APPS = [
