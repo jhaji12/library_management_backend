@@ -16,28 +16,10 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
+from django.conf.urls.static import static
+from django.conf import settings
 from library.views import UserLoginView, UserLogoutView, StudentDetailView, StudentCreateView, StudentListView, StudentDeleteView, BookDetailView, BookCreateView, BookListView, BookDeleteView, IssueBookView, ReturnBookView, IssuedBooksListView, ReturnedBooksListView, FacultyListView, FacultyCreateView, FacultyDeleteView, FacultyDetailView, AllIssuesListView
 
-'''
-Books API:
-GET /api/books/: Get a list of all books.
-POST /api/books/: Add a new book.
-GET /api/books/<book_id>/: Get details of a specific book.
-PUT /api/books/<book_id>/: Update details of a specific book.
-DELETE /api/books/<book_id>/: Delete a specific book.
-Students API:
-GET /api/students/: Get a list of all students.
-POST /api/students/: Add a new student.
-GET /api/students/<student_id>/: Get details of a specific student.
-PUT /api/students/<student_id>/: Update details of a specific student.
-DELETE /api/students/<student_id>/: Delete a specific student.
-Issues API:
-GET /api/issues/: Get a list of all issued books.
-POST /api/issues/: Issue a book to a student.
-GET /api/issues/<issue_id>/: Get details of a specific issue.
-PUT /api/issues/<issue_id>/: Update details of a specific issue (e.g., return a book).
-DELETE /api/issues/<issue_id>/: Delete a specific issue.
-'''
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -59,3 +41,6 @@ urlpatterns = [
     path('return/', ReturnedBooksListView.as_view()),
     path('issues/all/', AllIssuesListView.as_view()),
 ]
+
+urlpatterns += static(settings.MEDIA_URL, document_root = settings.MEDIA_ROOT)
+urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
