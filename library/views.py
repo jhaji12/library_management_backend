@@ -148,8 +148,9 @@ class IssueBookView(generics.CreateAPIView):
 
         book.available_copies -= 1
         book.save()
-
+        print("reached hereeee")
         serializer = self.get_serializer(issue)
+        print("reached hereeee", serializer.data)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 class ReturnBookView(generics.UpdateAPIView):

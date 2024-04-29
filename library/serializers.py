@@ -17,10 +17,10 @@ class BookSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 class IssueSerializer(serializers.ModelSerializer):
-    book_id = serializers.CharField()
+    book_id = serializers.CharField(max_length=100)
     issuer_type = serializers.ChoiceField(choices=['student', 'faculty'])
-    student_id = serializers.CharField(required=False)
-    faculty_id = serializers.CharField(required=False)
+    student_id = serializers.CharField(max_length=100, required=False)
+    faculty_id = serializers.CharField(max_length=100, required=False)
 
     class Meta:
         model = Issue
