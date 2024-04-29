@@ -127,7 +127,9 @@ class IssueBookView(generics.CreateAPIView):
         except Book.DoesNotExist:
             return Response({"error": "Book not found"}, status=status.HTTP_404_NOT_FOUND)
         except (Student.DoesNotExist, Faculty.DoesNotExist):
-            return Response({"error": "Issuer not found"}, status=status.HTTP_404_NOT_FOUND)
+            if is_student: 
+                return Response({"error": "Student detail not found in the data"}, status=status.HTTP_404_NOT_FOUND)
+            return Response({"error": "Faculty detail not found in the data"}, status=status.HTTP_404_NOT_FOUND)
 
         # Check if the same book is already issued to the same issuer
         if is_student and Issue.objects.filter(book=book, student=issuer, returned=False).exists() or (not is_student) and Issue.objects.filter(book=book, faculty=issuer, returned=False).exists():
