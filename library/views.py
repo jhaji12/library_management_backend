@@ -121,9 +121,9 @@ class IssueBookView(generics.CreateAPIView):
         try:
             book = Book.objects.get(book_id=book_id)
             if is_student:
-                issuer = Student.objects.get(id=issuer_id)
+                issuer = Student.objects.get(adm_number=issuer_id)
             else:
-                issuer = Faculty.objects.get(id=issuer_id)
+                issuer = Faculty.objects.get(faculty_id=issuer_id)
         except Book.DoesNotExist:
             return Response({"error": "Book not found"}, status=status.HTTP_404_NOT_FOUND)
         except (Student.DoesNotExist, Faculty.DoesNotExist):
