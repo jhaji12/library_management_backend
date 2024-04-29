@@ -18,7 +18,6 @@ class BookSerializer(serializers.ModelSerializer):
 
 class IssueSerializer(serializers.ModelSerializer):
     book_id = serializers.CharField(max_length=100)
-    issuer_type = serializers.ChoiceField(choices=['student', 'faculty'])
     student_id = serializers.CharField(max_length=100, required=False)
     faculty_id = serializers.CharField(max_length=100, required=False)
 
@@ -28,7 +27,10 @@ class IssueSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         book_id = validated_data.pop('book_id')
-        issuer_type = validated_data.pop('issuer_type')
+        if student_id:
+            issuer_type = "student"
+        else:
+            issuer_type = "faculty"
 
         # Retrieve the Book object using the provided ID
         try:
@@ -59,8 +61,6 @@ class IssueSerializer(serializers.ModelSerializer):
 
             # Create the Issue object with the retrieved Book and Faculty objects
             issue = Issue.objects.create(book=book, faculty=faculty, **validated_data)
-        else:
-            raise serializers.ValidationError("Invalid issuer type")
 
         return issue
 
