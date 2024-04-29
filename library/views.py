@@ -116,8 +116,7 @@ class IssueBookView(generics.CreateAPIView):
     def create(self, request, *args, **kwargs):
         book_id = request.data.get('book_id')
         issuer_id = request.data.get('issuer_id')
-        is_student_str = request.data.get('is_student', "false").lower()  # default to "false" if not provided
-        is_student = is_student_str == "true"  # Convert to boolean
+        is_student = request.data.get('is_student')
 
         try:
             book = Book.objects.get(book_id=book_id)
