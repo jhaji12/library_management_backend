@@ -116,46 +116,46 @@ class IssueBookView(generics.CreateAPIView):
     def create(self, request, *args, **kwargs):
         book_id = request.data.get('book_id')
         issuer_id = request.data.get('issuer_id')
-        is_student = request.data.get('is_student')
-
-        print("holaa", book_id, issuer_id, is_student)
+        is_student_str = request.data.get('is_student', "false").lower()  # default to "false" if not provided
+        is_student = is_student_str == "true"  # Convert to boolean
 
         try:
             book = Book.objects.get(book_id=book_id)
-            if is_student == "true":
+            if is_student:
                 issuer = Student.objects.get(adm_number=issuer_id)
             else:
                 issuer = Faculty.objects.get(faculty_id=issuer_id)
         except Book.DoesNotExist:
             return Response({"error": "Book not found"}, status=status.HTTP_404_NOT_FOUND)
         except (Student.DoesNotExist, Faculty.DoesNotExist):
-            if is_student == "true": 
-                return Response({"error": "Student detail not found in the data"}, status=status.HTTP_404_NOT_FOUND)
-            return Response({"error": "Faculty detail not found in the data"}, status=status.HTTP_404_NOT_FOUND)
+            if is_student:
+                return Response({"error": f"Student with admission number {issuer_id} not found"}, status=status.HTTP_404_NOT_FOUND)
+            else:
+                return Response({"error": f"Faculty with ID {issuer_id} not found"}, status=status.HTTP_404_NOT_FOUND)
 
-        # Check if the same book is already issued to the same issuer
-        if is_student == "true" and Issue.objects.filter(book=book, student=issuer, returned=False).exists() or (is_student == "false") and Issue.objects.filter(book=book, faculty=issuer, returned=False).exists():
+        if self.is_book_already_issued(book, issuer, is_student):
             return Response({"error": "The book is already issued to the issuer"}, status=status.HTTP_400_BAD_REQUEST)
 
         if book.available_copies <= 0:
             return Response({"error": "No available copies of the book"}, status=status.HTTP_400_BAD_REQUEST)
 
-        if is_student == "true":
-            if issuer.books_issued.count() >= issuer.max_books_allowed:
-                return Response({"error": "Issuer has already reached the maximum limit of books allowed to issue"}, status=status.HTTP_400_BAD_REQUEST)
+        if is_student and issuer.books_issued.count() >= issuer.max_books_allowed:
+            return Response({"error": "Issuer has already reached the maximum limit of books allowed to issue"}, status=status.HTTP_400_BAD_REQUEST)
 
-        if(is_student == "true"): 
-            issue= Issue(book=book, student=issuer)
-        else:
-            issue= Issue(book=book, faculty=issuer)
+        issue = Issue(book=book, student=issuer) if is_student else Issue(book=book, faculty=issuer)
         issue.save()
 
         book.available_copies -= 1
         book.save()
-        print("reached hereeee")
+
         serializer = self.get_serializer(issue)
-        print("reached hereeee", serializer.data)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    def is_book_already_issued(self, book, issuer, is_student):
+        if is_student:
+            return Issue.objects.filter(book=book, student=issuer, returned=False).exists()
+        else:
+            return Issue.objects.filter(book=book, faculty=issuer, returned=False).exists()
 
 class ReturnBookView(generics.UpdateAPIView):
     queryset = Issue.objects.all()
