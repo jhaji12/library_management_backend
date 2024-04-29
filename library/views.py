@@ -79,7 +79,7 @@ class FacultyDeleteView(generics.DestroyAPIView):
         self.perform_destroy(instance)
         return Response({"message": "Faculty deleted successfully"}, status=status.HTTP_204_NO_CONTENT)
 
-class BookCreateView(APIView):
+class BookCreateView(generics.CreateAPIView):
     queryset = Book.objects.all()
     serializer_class = BookSerializer
 
