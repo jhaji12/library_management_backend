@@ -116,11 +116,13 @@ class IssueBookView(generics.CreateAPIView):
     def create(self, request, *args, **kwargs):
         book_id = request.data.get('book_id')
         issuer_id = request.data.get('issuer_id')
-        is_student = request.data.get('is_student', True)
+        is_student = request.data.get('is_student')
+
+        print("holaa", book_id, issuer_id, is_student)
 
         try:
             book = Book.objects.get(book_id=book_id)
-            if is_student:
+            if is_student == "true":
                 issuer = Student.objects.get(adm_number=issuer_id)
             else:
                 issuer = Faculty.objects.get(faculty_id=issuer_id)
