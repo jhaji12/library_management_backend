@@ -129,22 +129,22 @@ class IssueBookView(generics.CreateAPIView):
         except Book.DoesNotExist:
             return Response({"error": "Book not found"}, status=status.HTTP_404_NOT_FOUND)
         except (Student.DoesNotExist, Faculty.DoesNotExist):
-            if is_student: 
+            if is_student == "true": 
                 return Response({"error": "Student detail not found in the data"}, status=status.HTTP_404_NOT_FOUND)
             return Response({"error": "Faculty detail not found in the data"}, status=status.HTTP_404_NOT_FOUND)
 
         # Check if the same book is already issued to the same issuer
-        if is_student and Issue.objects.filter(book=book, student=issuer, returned=False).exists() or (not is_student) and Issue.objects.filter(book=book, faculty=issuer, returned=False).exists():
+        if is_student == "true" and Issue.objects.filter(book=book, student=issuer, returned=False).exists() or (is_student == "false") and Issue.objects.filter(book=book, faculty=issuer, returned=False).exists():
             return Response({"error": "The book is already issued to the issuer"}, status=status.HTTP_400_BAD_REQUEST)
 
         if book.available_copies <= 0:
             return Response({"error": "No available copies of the book"}, status=status.HTTP_400_BAD_REQUEST)
 
-        if is_student:
+        if is_student == "true":
             if issuer.books_issued.count() >= issuer.max_books_allowed:
                 return Response({"error": "Issuer has already reached the maximum limit of books allowed to issue"}, status=status.HTTP_400_BAD_REQUEST)
 
-        if(is_student): 
+        if(is_student == "true"): 
             issue= Issue(book=book, student=issuer)
         else:
             issue= Issue(book=book, faculty=issuer)
