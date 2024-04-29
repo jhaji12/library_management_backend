@@ -165,11 +165,14 @@ class ReturnBookView(generics.UpdateAPIView):
         book_id = request.data.get('book_id')
         issuer_id = request.data.get('issuer_id')
         is_student = request.data.get('is_student', True)
-        
+        book = Book.objects.get(book_id=book_id)
+
         if is_student:
             student_id = issuer_id
+            student = Student.objects.get(adm_number=student_id)
         else:
             faculty_id = issuer_id
+            faculty = Faculty.objects.get(faculty_id=faculty_id)
 
         # Check if either student_id or faculty_id is provided
         if not (student_id or faculty_id):
@@ -178,11 +181,9 @@ class ReturnBookView(generics.UpdateAPIView):
         # Determine the type of issuer and retrieve the issue object accordingly
         try:
             if student_id:
-                issue = Issue.objects.get(book__book_id=book_id, student=student_id, returned=False)
-                issuer = Student.objects.get(id=student_id)
+                issue = Issue.objects.get(book=book, student=student, returned=False)
             else:
-                issue = Issue.objects.get(book__book_id=book_id, faculty=faculty_id, returned=False)
-                issuer = Faculty.objects.get(id=faculty_id)
+                issue = Issue.objects.get(book=book, faculty=faculty, returned=False)
         except (Issue.DoesNotExist, Student.DoesNotExist, Faculty.DoesNotExist):
             return Response({"error": "Issue not found for the provided book and issuer"}, status=status.HTTP_404_NOT_FOUND)
 
