@@ -147,8 +147,7 @@ class IssueBookView(generics.CreateAPIView):
         book.available_copies -= 1
         book.save()
 
-        serializer = self.get_serializer(issue)
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response("Successfully Issued Books", status=status.HTTP_201_CREATED)
 
     def is_book_already_issued(self, book, issuer, is_student):
         if is_student:
