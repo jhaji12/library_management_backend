@@ -22,7 +22,7 @@ class Student(models.Model):
     adm_number = models.CharField(max_length=20, unique=True)
     school_class = models.CharField(max_length=100)
     max_books_allowed = models.PositiveIntegerField(default=1)
-    books_issued = models.ManyToManyField(Book, related_name='issued_to_student', blank=True)
+    books_issued = models.ManyToManyField(Book, related_name='issued_to_student', blank=True, null=True)
 
     def __str__(self):
         return self.name
@@ -31,7 +31,7 @@ class Faculty(models.Model):
     name = models.CharField(max_length=100)
     faculty_id = models.CharField(max_length=20, unique=True)
     max_books_allowed = models.PositiveIntegerField(default=1)
-    books_issued = models.ManyToManyField(Book, related_name='issued_to_faculty', blank=True)
+    books_issued = models.ManyToManyField(Book, related_name='issued_to_faculty', blank=True, null=True)
 
     def __str__(self):
         return self.name
