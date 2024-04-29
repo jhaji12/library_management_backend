@@ -38,7 +38,6 @@ class Faculty(models.Model):
 
 class Issue(models.Model):
     book = models.ForeignKey(Book, on_delete=models.CASCADE, related_name='issues')
-    issuer_type = models.CharField(max_length=20, choices=[('student', 'Student'), ('faculty', 'Faculty')], default=('student', 'Student'))
     student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name='student_issues', blank=True, null=True)
     faculty = models.ForeignKey(Faculty, on_delete=models.CASCADE, related_name='faculty_issues', blank=True, null=True)
     issue_date = models.DateField(auto_now_add=True)
