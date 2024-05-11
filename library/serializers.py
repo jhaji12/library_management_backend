@@ -69,6 +69,7 @@ class IssuedBooksSerializer(serializers.ModelSerializer):
     title = serializers.ReadOnlyField(source='book.title')
     book_id = serializers.ReadOnlyField(source='book.book_id')
     student_name = serializers.ReadOnlyField(source='student.name')
+    school_class = serializers.ReadOnlyField(source='student.school_class')
     adm_number = serializers.ReadOnlyField(source='student.adm_number')
     faculty_name = serializers.ReadOnlyField(source='faculty.name')
     faculty_id = serializers.ReadOnlyField(source='faculty.faculty_id')
@@ -78,4 +79,4 @@ class IssuedBooksSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Issue
-        fields = ['title', 'book_id', 'student_name', 'adm_number', 'faculty_name', 'faculty_id','overdue_amount', 'return_date']
+        fields = ['title', 'book_id', 'student_name', 'school_class', 'adm_number', 'faculty_name', 'faculty_id','overdue_amount', 'return_date']
