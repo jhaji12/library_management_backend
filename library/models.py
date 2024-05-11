@@ -42,19 +42,20 @@ class Issue(models.Model):
     faculty = models.ForeignKey(Faculty, on_delete=models.CASCADE, related_name='faculty_issues', blank=True, null=True)
     issue_date = models.DateField(auto_now_add=True)
     return_date = models.DateField(blank=True, null=True)
+    overdue_fee_per_day = models.DecimalField(default=5, max_digits=10, decimal_places=2, validators=[MinValueValidator(0)])
     overdue_amount = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0)])
     returned = models.BooleanField(default=False)
+    days = models.IntegerField(default=7, validators=[MinValueValidator(1)])
 
     def save(self, *args, **kwargs):
-        if not self.returned:
-            self.return_date = timezone.now().date() + timedelta(days=30)
+        if not self.returned and not self.return_date:
+            self.return_date = timezone.now().date() + timedelta(days=self.days)
+
         if self.return_date and self.issue_date and self.return_date < timezone.now().date():
             # Calculate days overdue
             days_overdue = (timezone.now().date() - self.return_date).days
 
-            # Calculate overdue amount (for example, Rs. 5 per day overdue)
-            overdue_fee_per_day = 5  # Modify as needed
-            self.overdue_amount = overdue_fee_per_day * days_overdue
+            self.overdue_amount = self.overdue_fee_per_day * days_overdue
         else:
             self.overdue_amount = 0  # No overdue amount if return date is not set or is before issue date
 
