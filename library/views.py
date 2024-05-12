@@ -7,6 +7,7 @@ from rest_framework.pagination import PageNumberPagination
 from django.utils import timezone
 from django.contrib.auth import authenticate, login, logout
 from rest_framework.authtoken.models import Token
+from django.db import transaction
 
 class MyPagination(PageNumberPagination):
     page_size = 5000  # Set the number of items per page
@@ -121,6 +122,8 @@ class IssueBookView(generics.CreateAPIView):
         book_id = request.data.get('book_id')
         issuer_id = request.data.get('issuer_id')
         is_student = request.data.get('is_student')
+        days = request.data.get('days')
+        overdue_fee_per_day = request.data.get('fine')
 
         try:
             book = Book.objects.get(book_id=book_id)
@@ -141,11 +144,11 @@ class IssueBookView(generics.CreateAPIView):
 
         if book.available_copies <= 0:
             return Response({"error": "No available copies of the book"}, status=status.HTTP_400_BAD_REQUEST)
-
-        if is_student and issuer.books_issued.count() >= issuer.max_books_allowed:
+        issuer_issues_count = self.get_issuer_issues_count(issuer_id, is_student)
+        if issuer_issues_count >= issuer.max_books_allowed:
             return Response({"error": "Issuer has already reached the maximum limit of books allowed to issue"}, status=status.HTTP_400_BAD_REQUEST)
 
-        issue = Issue(book=book, student=issuer) if is_student else Issue(book=book, faculty=issuer)
+        issue = Issue(book=book, student=issuer, days=days, overdue_fee_per_day=overdue_fee_per_day) if is_student else Issue(book=book, faculty=issuer, days=days, overdue_fee_per_day=overdue_fee_per_day)
         issue.save()
 
         book.available_copies -= 1
@@ -159,6 +162,12 @@ class IssueBookView(generics.CreateAPIView):
             return Issue.objects.filter(book=book, student=issuer, returned=False).exists()
         else:
             return Issue.objects.filter(book=book, faculty=issuer, returned=False).exists()
+    
+    def get_issuer_issues_count(self, issuer_id, is_student):
+        if is_student:
+            return Issue.objects.filter(student__adm_number=issuer_id, returned=False).count()
+        else:
+            return Issue.objects.filter(faculty__faculty_id=issuer_id, returned=False).count()
 
 class ReturnBookView(generics.UpdateAPIView):
     queryset = Issue.objects.all()
@@ -191,12 +200,6 @@ class ReturnBookView(generics.UpdateAPIView):
         except (Issue.DoesNotExist, Student.DoesNotExist, Faculty.DoesNotExist):
             return Response({"error": "Issue not found for the provided book and issuer"}, status=status.HTTP_404_NOT_FOUND)
 
-        # Calculate overdue amount if return date is in the past
-        if issue.return_date and issue.return_date < timezone.now().date():
-            days_overdue = (timezone.now().date() - issue.return_date).days
-            overdue_fee_per_day = 5  # Adjust as needed
-            issue.overdue_amount = days_overdue * overdue_fee_per_day
-
         # Update the instance to mark the book as returned
         issue.returned = True
         issue.save()
@@ -213,8 +216,15 @@ class IssuedBooksListView(generics.ListAPIView):
     pagination_class = MyPagination
 
     def get_queryset(self):
-        # Filter issues where books are not returned
-        return Issue.objects.filter(returned=False)
+        # Fetch all the issued books
+        queryset = Issue.objects.filter(returned=False)
+
+        # Trigger save method to update overdue amounts
+        with transaction.atomic():
+            for issue in queryset:
+                issue.save()
+
+        return queryset
 
 class ReturnedBooksListView(generics.ListAPIView):
     serializer_class = IssuedBooksSerializer

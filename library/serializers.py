@@ -1,10 +1,5 @@
 from rest_framework import serializers
 from .models import Student, Book, Issue, Faculty
-       
-class StudentSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Student
-        fields = "__all__"
 
 class FacultySerializer(serializers.ModelSerializer):
     class Meta:
@@ -16,10 +11,17 @@ class BookSerializer(serializers.ModelSerializer):
         model = Book
         fields = "__all__"
 
+class StudentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Student
+        fields = "__all__"
+
 class IssueSerializer(serializers.ModelSerializer):
     book_id = serializers.CharField(max_length=100)
     student_id = serializers.CharField(max_length=100, required=False)
     faculty_id = serializers.CharField(max_length=100, required=False)
+    days = serializers.IntegerField()
+    overdue_fee_per_day = serializers.DecimalField(max_digits=10, decimal_places=2)
 
     class Meta:
         model = Issue
@@ -27,11 +29,15 @@ class IssueSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         book_id = validated_data.pop('book_id')
-        if student_id:
+        if 'student_id' in validated_data:
             issuer_type = "student"
-        else:
+            issuer_id = validated_data.pop('student_id')
+        elif 'faculty_id' in validated_data:
             issuer_type = "faculty"
-
+            issuer_id = validated_data.pop('faculty_id')
+        else:
+            raise serializers.ValidationError("Issuer ID is required")
+        
         # Retrieve the Book object using the provided ID
         try:
             book = Book.objects.get(pk=book_id)
