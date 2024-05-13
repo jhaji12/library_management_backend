@@ -4,7 +4,6 @@ from rest_framework.response import Response
 from .models import Student, Book, Issue, Faculty
 from .serializers import StudentSerializer, BookSerializer, IssueSerializer, FacultySerializer, IssuedBooksSerializer
 from rest_framework.pagination import PageNumberPagination
-from django.utils import timezone
 from django.contrib.auth import authenticate, login, logout
 from rest_framework.authtoken.models import Token
 from django.db import transaction
@@ -55,6 +54,11 @@ class StudentDeleteView(generics.DestroyAPIView):
         self.perform_destroy(instance)
         return Response({"message": "Student deleted successfully"}, status=status.HTTP_204_NO_CONTENT)
 
+class StudentUpdateView(generics.UpdateAPIView):
+    queryset = Student.objects.all()
+    serializer_class = StudentSerializer
+    lookup_field = 'adm_number'
+
 class FacultyCreateView(generics.CreateAPIView):
     queryset = Faculty.objects.all()
     serializer_class = FacultySerializer
@@ -78,6 +82,11 @@ class FacultyDeleteView(generics.DestroyAPIView):
         instance = self.get_object()
         self.perform_destroy(instance)
         return Response({"message": "Faculty deleted successfully"}, status=status.HTTP_204_NO_CONTENT)
+
+class FacultyUpdateView(generics.UpdateAPIView):
+    queryset = Faculty.objects.all()
+    serializer_class = FacultySerializer
+    lookup_field = "faculty_id"
 
 class BookCreateView(generics.CreateAPIView):
     queryset = Book.objects.all()
