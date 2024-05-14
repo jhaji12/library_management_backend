@@ -1,7 +1,7 @@
 
 from django.contrib import admin
 from django.urls import path
-from library.views import UserLoginView, UserLogoutView, StudentDetailView, StudentCreateView, StudentListView, StudentDeleteView, BookDetailView, BookCreateView, BookListView, BookDeleteView, IssueBookView, ReturnBookView, IssuedBooksListView, ReturnedBooksListView, FacultyListView, FacultyCreateView, FacultyDeleteView, FacultyDetailView, AllIssuesListView, BookUpdateView
+from library.views import UserLoginView, UserLogoutView, StudentDetailView, StudentCreateView, StudentListView, StudentDeleteView, StudentUpdateView, BookDetailView, BookCreateView, BookListView, BookDeleteView, IssueBookView, ReturnBookView, IssuedBooksListView, ReturnedBooksListView, FacultyListView, FacultyCreateView, FacultyDeleteView, FacultyDetailView, AllIssuesListView, BookUpdateView
 from django.conf import settings
 from django.conf.urls.static import static
 
@@ -21,6 +21,7 @@ urlpatterns = [
     path('students/', StudentListView.as_view()),
     path('students/add/', StudentCreateView.as_view()),
     path('students/<str:adm_number>/', StudentDetailView.as_view()),
+    path('students/<str:adm_number>/edit/', StudentUpdateView.as_view(), ),
     path('students/<str:adm_number>/delete/', StudentDeleteView.as_view()),
     path('faculty/', FacultyListView.as_view()),
     path('faculty/add/', FacultyCreateView.as_view()),
