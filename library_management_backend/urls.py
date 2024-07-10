@@ -1,7 +1,7 @@
 
 from django.contrib import admin
 from django.urls import path
-from library.views import UserLoginView, UserLogoutView, StudentDetailView, StudentCreateView, StudentListView, StudentDeleteView, StudentUpdateView, BookDetailView, BookCreateView, BookListView, BookDeleteView, IssueBookView, ReturnBookView, IssuedBooksListView, ReturnedBooksListView, FacultyListView, FacultyCreateView, FacultyDeleteView, FacultyDetailView, AllIssuesListView, BookUpdateView
+from library.views import UserLoginView, UserLogoutView, StudentDetailView, StudentCreateView, StudentListView, StudentDeleteView, StudentUpdateView, BookDetailView, BookCreateView, BookListView, BookDeleteView, IssueBookView, ReturnBookView, IssuedBooksListView, ReturnedBooksListView, FacultyListView, FacultyCreateView, FacultyDeleteView, FacultyDetailView, AllIssuesListView, BookUpdateView, UserSignupView
 from django.conf import settings
 from django.conf.urls.static import static
 
@@ -11,6 +11,7 @@ admin.site.index_title = 'Mountassisi School'
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('signup/', UserSignupView.as_view(), name='user_signup'),
     path('login/', UserLoginView.as_view(), name='login'),
     path('logout/', UserLogoutView.as_view(), name='logout'),
     path('books/', BookListView.as_view()),

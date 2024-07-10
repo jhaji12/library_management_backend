@@ -1,5 +1,20 @@
 from rest_framework import serializers
-from .models import Student, Book, Issue, Faculty
+from .models import Student, Book, Issue, Faculty, User, School
+
+class UserRegistrationSerializer(serializers.ModelSerializer):
+    password = serializers.CharField(write_only=True)
+
+    def create(self, validated_data):
+        user = User.objects.create_user(
+            username=validated_data['username'],
+            password=validated_data['password'],
+            school=validated_data['school']
+        )
+        return user
+
+    class Meta:
+        model = User
+        fields = ['username', 'password', 'school']
 
 class FacultySerializer(serializers.ModelSerializer):
     class Meta:
@@ -10,11 +25,19 @@ class BookSerializer(serializers.ModelSerializer):
     class Meta:
         model = Book
         fields = "__all__"
+    
+    def create(self, validated_data):
+        book = Book.objects.create(**validated_data)
+        return book
 
 class StudentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Student
         fields = "__all__"
+
+    def create(self, validated_data):
+        student = Student.objects.create(**validated_data)
+        return student
 
 class IssueSerializer(serializers.ModelSerializer):
     book_id = serializers.CharField(max_length=100)
@@ -28,6 +51,8 @@ class IssueSerializer(serializers.ModelSerializer):
         exclude = ['return_date']
 
     def create(self, validated_data):
+        request = self.context.get('request')
+
         book_id = validated_data.pop('book_id')
         if 'student_id' in validated_data:
             issuer_type = "student"
@@ -37,7 +62,7 @@ class IssueSerializer(serializers.ModelSerializer):
             issuer_id = validated_data.pop('faculty_id')
         else:
             raise serializers.ValidationError("Issuer ID is required")
-        
+
         # Retrieve the Book object using the provided ID
         try:
             book = Book.objects.get(pk=book_id)
@@ -54,7 +79,7 @@ class IssueSerializer(serializers.ModelSerializer):
             except Student.DoesNotExist:
                 raise serializers.ValidationError("Student does not exist")
 
-            # Create the Issue object with the retrieved Book and Student objects
+            # Create the Issue object with the retrieved Book, School, and Student objects
             issue = Issue.objects.create(book=book, student=student, **validated_data)
         elif issuer_type == 'faculty':
             faculty_id = validated_data.pop('faculty_id', None)
@@ -65,7 +90,7 @@ class IssueSerializer(serializers.ModelSerializer):
             except Faculty.DoesNotExist:
                 raise serializers.ValidationError("Faculty does not exist")
 
-            # Create the Issue object with the retrieved Book and Faculty objects
+            # Create the Issue object with the retrieved Book, School, and Faculty objects
             issue = Issue.objects.create(book=book, faculty=faculty, **validated_data)
 
         return issue

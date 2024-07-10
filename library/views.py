@@ -1,27 +1,47 @@
 from rest_framework import generics, status
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from .models import Student, Book, Issue, Faculty
-from .serializers import StudentSerializer, BookSerializer, IssueSerializer, FacultySerializer, IssuedBooksSerializer
+from .models import Student, Book, Issue, Faculty, School
+from .serializers import StudentSerializer, BookSerializer, IssueSerializer, FacultySerializer, IssuedBooksSerializer, UserRegistrationSerializer
 from rest_framework.pagination import PageNumberPagination
 from django.contrib.auth import authenticate, login, logout
 from rest_framework.authtoken.models import Token
 from django.db import transaction
+from django.db.models import Q
 
 class MyPagination(PageNumberPagination):
     page_size = 5000  # Set the number of items per page
 
+def get_school_level(request):
+    """
+    Utility function to retrieve school level from request headers.
+    """
+    school_level = request.headers.get('School-Level')
+    if not school_level:
+        raise ValueError("School level not provided in headers")
+    return school_level
+
+class UserSignupView(APIView):
+    serializer_class = UserRegistrationSerializer
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.serializer_class(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
 class UserLoginView(APIView):
     def post(self, request):
         username = request.data.get('username')
         password = request.data.get('password')
-        
+
         user = authenticate(request, username=username, password=password)
         if user is not None:
             login(request, user)
-            # Generate or retrieve token for the user
             token, created = Token.objects.get_or_create(user=user)
-            return Response({"token": token.key}, status=status.HTTP_200_OK)
+            school_level = user.school.id  # Assuming User model has a foreign key to School
+            return Response({"token": token.key, "school_level": school_level}, status=status.HTTP_200_OK)
         else:
             return Response({"error": "Invalid credentials"}, status=status.HTTP_401_UNAUTHORIZED)
 
@@ -35,9 +55,15 @@ class StudentCreateView(generics.CreateAPIView):
     serializer_class = StudentSerializer
     
 class StudentListView(generics.ListAPIView):
-    queryset = Student.objects.all()
     serializer_class = StudentSerializer
     pagination_class = MyPagination
+
+    def get_queryset(self):
+        try:
+            school_level = get_school_level(self.request)
+            return Student.objects.filter(school__id=school_level)
+        except ValueError as e:
+            return Student.objects.none()
 
 class StudentDetailView(generics.RetrieveAPIView):
     queryset = Student.objects.all()
@@ -62,11 +88,24 @@ class StudentUpdateView(generics.UpdateAPIView):
 class FacultyCreateView(generics.CreateAPIView):
     queryset = Faculty.objects.all()
     serializer_class = FacultySerializer
+
     
 class FacultyListView(generics.ListAPIView):
-    queryset = Faculty.objects.all()
     serializer_class = FacultySerializer
     pagination_class = MyPagination
+
+    def get_queryset(self):
+        school_level = self.request.headers.get('School-Level')
+        if school_level:
+            # Fetch all the issued books
+            queryset = Faculty.objects.filter(school__id=school_level)
+
+            # Trigger save method to update overdue amounts
+            with transaction.atomic():
+                for issue in queryset:
+                    issue.save()
+
+        return queryset
 
 class FacultyDetailView(generics.RetrieveAPIView):
     queryset = Faculty.objects.all()
@@ -93,9 +132,15 @@ class BookCreateView(generics.CreateAPIView):
     serializer_class = BookSerializer
 
 class BookListView(generics.ListAPIView):
-    queryset = Book.objects.all()
     serializer_class = BookSerializer
     pagination_class = MyPagination
+
+    def get_queryset(self):
+        try:
+            school_level = get_school_level(self.request)
+            return Book.objects.filter(school__id=school_level)
+        except ValueError as e:
+            return Book.objects.none()
 
 class BookDetailView(generics.RetrieveAPIView):
     queryset = Book.objects.all()
@@ -114,14 +159,11 @@ class BookDeleteView(generics.DestroyAPIView):
 
     def destroy(self, request, *args, **kwargs):
         book = self.get_object()
-        # Check if there are any issued copies of the book
         issued_copies = Issue.objects.filter(book=book, returned=False).exists()
         if issued_copies:
             return Response({"error": "Cannot delete book. There are issued copies."}, status=status.HTTP_400_BAD_REQUEST)
 
-        # If no issued copies, delete the book and its associated copies
         book.delete()
-
         return Response({"message": "Book and associated copies deleted successfully"}, status=status.HTTP_204_NO_CONTENT)
 
 class IssueBookView(generics.CreateAPIView):
@@ -133,9 +175,11 @@ class IssueBookView(generics.CreateAPIView):
         is_student = request.data.get('is_student')
         days = request.data.get('days')
         overdue_fee_per_day = request.data.get('fine')
+        school_id = request.data.get('school')
 
         try:
             book = Book.objects.get(book_id=book_id)
+            school = School.objects.get(id=school_id)
             if is_student:
                 issuer = Student.objects.get(adm_number=issuer_id)
             else:
@@ -157,7 +201,7 @@ class IssueBookView(generics.CreateAPIView):
         if issuer_issues_count >= issuer.max_books_allowed:
             return Response({"error": "Issuer has already reached the maximum limit of books allowed to issue"}, status=status.HTTP_400_BAD_REQUEST)
 
-        issue = Issue(book=book, student=issuer, days=days, overdue_fee_per_day=overdue_fee_per_day) if is_student else Issue(book=book, faculty=issuer, days=days, overdue_fee_per_day=overdue_fee_per_day)
+        issue = Issue(book=book, student=issuer, school=school, days=days, overdue_fee_per_day=overdue_fee_per_day) if is_student else Issue(book=book, faculty=issuer, school=school, days=days, overdue_fee_per_day=overdue_fee_per_day)
         issue.save()
 
         book.available_copies -= 1
@@ -183,11 +227,12 @@ class ReturnBookView(generics.UpdateAPIView):
     serializer_class = IssueSerializer
 
     def update(self, request, *args, **kwargs):
-        # Retrieve book_id, student_id, and faculty_id from the request data
         book_id = request.data.get('book_id')
+        school_id = request.data.get('school')
         issuer_id = request.data.get('issuer_id')
         is_student = request.data.get('is_student', True)
         book = Book.objects.get(book_id=book_id)
+        school = School.objects.get(id=school_id)
 
         if is_student:
             student_id = issuer_id
@@ -196,20 +241,17 @@ class ReturnBookView(generics.UpdateAPIView):
             faculty_id = issuer_id
             faculty = Faculty.objects.get(faculty_id=faculty_id)
 
-        # Check if either student_id or faculty_id is provided
         if not (student_id or faculty_id):
             return Response({"error": "Either student_id or faculty_id must be provided"}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Determine the type of issuer and retrieve the issue object accordingly
         try:
             if student_id:
-                issue = Issue.objects.get(book=book, student=student, returned=False)
+                issue = Issue.objects.get(book=book, student=student, school=school, returned=False)
             else:
-                issue = Issue.objects.get(book=book, faculty=faculty, returned=False)
+                issue = Issue.objects.get(book=book, faculty=faculty, school=school, returned=False)
         except (Issue.DoesNotExist, Student.DoesNotExist, Faculty.DoesNotExist):
             return Response({"error": "Issue not found for the provided book and issuer"}, status=status.HTTP_404_NOT_FOUND)
 
-        # Update the instance to mark the book as returned
         issue.returned = True
         issue.save()
 
@@ -225,13 +267,14 @@ class IssuedBooksListView(generics.ListAPIView):
     pagination_class = MyPagination
 
     def get_queryset(self):
-        # Fetch all the issued books
+        school_level = self.request.headers.get('School-Level')
         queryset = Issue.objects.filter(returned=False)
-
-        # Trigger save method to update overdue amounts
-        with transaction.atomic():
-            for issue in queryset:
-                issue.save()
+        
+        if school_level:
+            queryset = queryset.filter(
+                Q(student__school__id=school_level) |
+                Q(faculty__school__id=school_level)
+            )
 
         return queryset
 
@@ -240,6 +283,10 @@ class ReturnedBooksListView(generics.ListAPIView):
     pagination_class = MyPagination
 
     def get_queryset(self):
+        school_level = self.request.headers.get('School-Level')
+        if school_level:
+            return Issue.objects.filter(returned=True).filter(Q(student__school__id=school_level) |
+                Q(faculty__school__id=school_level))
         return Issue.objects.filter(returned=True)
 
 class AllIssuesListView(generics.ListAPIView):
@@ -247,4 +294,8 @@ class AllIssuesListView(generics.ListAPIView):
     pagination_class = MyPagination
 
     def get_queryset(self):
+        school_level = self.request.headers.get('School-Level')
+        if school_level:
+            return Issue.objects.filter(Q(student__school__id=school_level) |
+                Q(faculty__school__id=school_level))
         return Issue.objects.all()
