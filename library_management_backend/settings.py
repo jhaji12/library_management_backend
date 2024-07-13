@@ -24,9 +24,9 @@ DEBUG = True
 
 # ALLOWED_HOSTS = ['127.0.0.1', '.vercel.app', 'localhost', 'now.sh', '.floxus.co', ".onrender.com", "4.213.40.183"]
 
-ALLOWED_HOSTS = ['catscarer-raptor.toystack.dev', '127.0.0.1', 'localhost']
+ALLOWED_HOSTS = ['library_management.toystack.dev', '127.0.0.1', 'localhost']
 
-CSRF_TRUSTED_ORIGINS = ['https://catscarer-raptor.toystack.dev']
+CSRF_TRUSTED_ORIGINS = ['https://library_management.toystack.dev']
 # Application definition
 
 INSTALLED_APPS = [
