@@ -20,7 +20,7 @@ class User(AbstractUser):
     school = models.ForeignKey(School, on_delete=models.CASCADE, blank=True, null=True)
 
     def __str__(self):
-        return self.get_level_display()
+        return self.username
 
 class Book(models.Model):
     book_id = models.CharField(max_length=20, unique=True)
