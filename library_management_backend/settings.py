@@ -23,8 +23,10 @@ SECRET_KEY = 'django-insecure-^exqbk*o+yn)p-9!$*fzlh4a$ldm$$j14hx($6dakj7+l981k^
 DEBUG = True
 
 # ALLOWED_HOSTS = ['127.0.0.1', '.vercel.app', 'localhost', 'now.sh', '.floxus.co', ".onrender.com", "4.213.40.183"]
+ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS", "*").split(",")
 
-ALLOWED_HOSTS = ["*"]
+CSRF_TRUSTED_ORIGINS = ['https://librarymanagement.toystack.dev']
+# ALLOWED_HOSTS = ["*"]
 # Application definition
 
 INSTALLED_APPS = [
