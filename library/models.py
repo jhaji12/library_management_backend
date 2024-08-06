@@ -75,13 +75,6 @@ class Issue(models.Model):
     def save(self, *args, **kwargs):
         if not self.returned and not self.return_date:
             self.return_date = timezone.localtime().date() + timedelta(days=int(self.days))
-        if self.return_date and self.issue_date and self.return_date < timezone.localtime().date():
-            # Calculate days overdue
-            days_overdue = (timezone.localtime().date() - self.return_date).days
-            self.overdue_amount = self.overdue_fee_per_day * days_overdue
-        else:
-            self.overdue_amount = 0  # No overdue amount if return date is not set or is before issue date
-
         super().save(*args, **kwargs)
 
     def __str__(self):

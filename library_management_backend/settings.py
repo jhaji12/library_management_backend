@@ -2,6 +2,7 @@ from pathlib import Path
 import os
 import dj_database_url
 from dotenv import load_dotenv
+from celery.schedules import crontab
 
 # Load environment variables from .env file
 load_dotenv()
@@ -172,3 +173,17 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# settings.py
+
+CELERY_BROKER_URL = os.environ.get("REDIS_KEY")
+CELERY_RESULT_BACKEND = os.environ.get("REDIS_KEY")
+
+CELERY_BEAT_SCHEDULE = {
+    'update-overdue-every-midnight': {
+        'task': 'library.tasks.update_overdue',
+        'schedule': crontab(hour=0, minute=0),
+    },
+}
+
+CELERY_TIMEZONE = 'Asia/Kolkata'
