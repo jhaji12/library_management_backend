@@ -8,6 +8,7 @@ from django.contrib.auth import authenticate, login, logout
 from rest_framework.authtoken.models import Token
 from django.db import transaction
 from django.db.models import Q
+from datetime import date, timedelta
 
 class MyPagination(PageNumberPagination):
     page_size = 5000  # Set the number of items per page
@@ -173,8 +174,8 @@ class IssueBookView(generics.CreateAPIView):
         book_id = request.data.get('book_id')
         issuer_id = request.data.get('issuer_id')
         is_student = request.data.get('is_student')
-        days = request.data.get('days')
-        overdue_fee_per_day = request.data.get('fine')
+        days = int(request.data.get('days', 0))  # Ensure days is an integer
+        overdue_fee_per_day = float(request.data.get('fine', 0))  # Ensure fine is a float
         school_id = request.data.get('school')
 
         try:
@@ -197,11 +198,24 @@ class IssueBookView(generics.CreateAPIView):
 
         if book.available_copies <= 0:
             return Response({"error": "No available copies of the book"}, status=status.HTTP_400_BAD_REQUEST)
+        
         issuer_issues_count = self.get_issuer_issues_count(issuer_id, is_student)
-        if issuer_issues_count >= issuer.max_books_allowed:
+        if issuer_issues_count >= (issuer.max_books_allowed if is_student else issuer.max_books_allowed):
             return Response({"error": "Issuer has already reached the maximum limit of books allowed to issue"}, status=status.HTTP_400_BAD_REQUEST)
 
-        issue = Issue(book=book, student=issuer, school=school, days=days, overdue_fee_per_day=overdue_fee_per_day) if is_student else Issue(book=book, faculty=issuer, school=school, days=days, overdue_fee_per_day=overdue_fee_per_day)
+        return_date = date.today() + timedelta(days=days)
+        overdue_amount = days * overdue_fee_per_day  # Calculate overdue amount
+
+        issue = Issue(
+            book=book,
+            student=issuer if is_student else None,
+            faculty=issuer if not is_student else None,
+            school=school,
+            days=days,
+            overdue_fee_per_day=overdue_fee_per_day,
+            overdue_amount=overdue_amount,  # Set the calculated overdue amount
+            return_date=return_date
+        )
         issue.save()
 
         book.available_copies -= 1
@@ -269,12 +283,17 @@ class IssuedBooksListView(generics.ListAPIView):
     def get_queryset(self):
         school_level = self.request.headers.get('School-Level')
         queryset = Issue.objects.filter(returned=False)
-        
+
         if school_level:
             queryset = queryset.filter(
                 Q(student__school__id=school_level) |
                 Q(faculty__school__id=school_level)
             )
+        
+        # Calculate overdue amount for each issue
+        current_date = date.today()
+        for issue in queryset:
+            issue.overdue_amount = issue.calculate_overdue_amount(current_date)
 
         return queryset
 

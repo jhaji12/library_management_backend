@@ -2,7 +2,7 @@ from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.core.validators import MinValueValidator
 from datetime import timedelta
-from django.utils import timezone
+from datetime import date
 
 class School(models.Model):
     PRIMARY = 'primary'
@@ -67,14 +67,29 @@ class Issue(models.Model):
     issue_date = models.DateField(auto_now_add=True)
     return_date = models.DateField(blank=True, null=True)
     overdue_fee_per_day = models.DecimalField(default=5, max_digits=10, decimal_places=2, validators=[MinValueValidator(0)])
-    overdue_amount = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0)])
+    overdue_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     returned = models.BooleanField(default=False)
     days = models.IntegerField(default=7, validators=[MinValueValidator(1)])
     school = models.ForeignKey(School, on_delete=models.CASCADE, related_name='issues')
 
+    def calculate_overdue_amount(self, current_date=None):
+        if current_date is None:
+            current_date = date.today()
+
+        if self.returned:
+            return 0
+
+        if self.return_date and self.return_date < current_date:
+            overdue_days = (current_date - self.return_date).days
+            return overdue_days * (self.overdue_fee_per_day or 0)
+        
+        return 0
+    
     def save(self, *args, **kwargs):
-        if not self.returned and not self.return_date:
-            self.return_date = timezone.localtime().date() + timedelta(days=int(self.days))
+        if self.returned and self.return_date:
+            self.overdue_amount = self.calculate_overdue_amount(self.return_date)
+        else:
+            self.overdue_amount = self.calculate_overdue_amount(date.today())
         super().save(*args, **kwargs)
 
     def __str__(self):

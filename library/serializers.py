@@ -106,8 +106,8 @@ class IssuedBooksSerializer(serializers.ModelSerializer):
     faculty_id = serializers.ReadOnlyField(source='faculty.faculty_id')
     overdue_amount = serializers.ReadOnlyField()
     return_date = serializers.ReadOnlyField()
-    # returned = serializers.ReadOnlyField()
+    returned = serializers.ReadOnlyField()
 
     class Meta:
         model = Issue
-        fields = ['title', 'book_id', 'student_name', 'school_class', 'adm_number', 'faculty_name', 'faculty_id','overdue_amount', 'return_date']
+        fields = ['title', 'book_id', 'student_name', 'school_class', 'adm_number', 'faculty_name', 'faculty_id','overdue_amount', 'return_date', 'returned']
